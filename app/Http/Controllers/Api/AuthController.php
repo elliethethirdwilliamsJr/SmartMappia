@@ -109,6 +109,23 @@ class AuthController extends Controller
     }
 
     /**
+     * Get all users (admin/debug endpoint)
+     */
+    public function allUsers(Request $request)
+    {
+        // TODO: Add admin authentication check
+        $users = User::select('id', 'name', 'email', 'phone', 'national_id', 'role', 'created_at')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'count' => $users->count(),
+            'data' => $users,
+        ]);
+    }
+
+    /**
      * Update user profile
      */
     public function updateProfile(Request $request)

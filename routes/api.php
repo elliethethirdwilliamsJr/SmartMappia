@@ -21,6 +21,9 @@ Route::prefix('auth')->group(function () {
     Route::post('verify-phone', [AuthController::class, 'verifyPhone']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    
+    // Debug/Admin endpoint to view all users
+    Route::get('users', [AuthController::class, 'allUsers']);
 });
 
 // Public location data
