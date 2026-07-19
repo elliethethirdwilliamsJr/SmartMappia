@@ -19,6 +19,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
+            'national_id' => 'required|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'sometimes|in:customer,driver',
         ]);
@@ -27,6 +28,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'national_id' => $request->national_id,
             'password' => Hash::make($request->password),
             'role' => $request->role ?? 'customer',
         ]);
@@ -44,20 +46,24 @@ class AuthController extends Controller
     }
 
     /**
-     * Login user
+     * Login user with Email, Phone, or National ID
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'identifier' => 'required|string', // Can be email, phone, or national_id
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // Try to find user by email, phone, or national_id
+        $user = User::where('email', $request->identifier)
+            ->orWhere('phone', $request->identifier)
+            ->orWhere('national_id', $request->identifier)
+            ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'identifier' => ['The provided credentials are incorrect.'],
             ]);
         }
 
