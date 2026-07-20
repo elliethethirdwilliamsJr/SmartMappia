@@ -63,14 +63,23 @@ class AuthController extends Controller
      */
     public function verifyAndRegister(Request $request)
     {
-        $request->validate([
+        // Custom validation for national_id - only check uniqueness if not empty
+        $rules = [
             'email' => 'required|string|email',
             'code' => 'required|string|size:6',
             'phone' => 'required|string|max:20|unique:users',
-            'national_id' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'sometimes|in:user,driver,restaurant',
-        ]);
+        ];
+        
+        // Only add national_id uniqueness check if it's not empty
+        if ($request->filled('national_id') && $request->national_id !== '') {
+            $rules['national_id'] = 'required|string|max:20|unique:users';
+        } else {
+            $rules['national_id'] = 'nullable|string|max:20';
+        }
+        
+        $request->validate($rules);
 
         // Get cached verification data
         $cacheKey = 'email_verification_' . $request->email;
@@ -100,12 +109,12 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Create user
+        // Create user - store NULL instead of empty string for national_id
         $user = User::create([
             'name' => $verificationData['name'],
             'email' => $request->email,
             'phone' => $request->phone,
-            'national_id' => $request->national_id,
+            'national_id' => $request->filled('national_id') && $request->national_id !== '' ? $request->national_id : null,
             'password' => Hash::make($request->password),
             'role' => $request->role ?? 'user', // Default to 'user'
             'email_verified' => true,
