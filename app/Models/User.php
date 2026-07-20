@@ -16,11 +16,13 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'national_id',
         'password',
         'role',
         'profile_photo',
         'rating',
         'total_ratings',
+        'email_verified',
     ];
 
     protected $hidden = [
@@ -72,6 +74,16 @@ class User extends Authenticatable
 
     public function isCustomer(): bool
     {
-        return $this->role === 'customer';
+        return $this->role === 'customer' || $this->role === 'user';
+    }
+    
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+    
+    public function isRestaurant(): bool
+    {
+        return $this->role === 'restaurant';
     }
 }

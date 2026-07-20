@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['customer', 'driver', 'admin'])->default('customer');
+            $table->enum('role', ['user', 'customer', 'driver', 'restaurant', 'admin'])->default('user');
             $table->string('profile_photo')->nullable();
             $table->decimal('rating', 3, 2)->default(5.00);
             $table->integer('total_ratings')->default(0);
