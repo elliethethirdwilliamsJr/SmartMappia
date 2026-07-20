@@ -69,7 +69,7 @@ class AuthController extends Controller
             'phone' => 'required|string|max:20|unique:users',
             'national_id' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|in:customer,driver',
+            'role' => 'sometimes|in:user,driver,restaurant',
         ]);
 
         // Get cached verification data
@@ -107,7 +107,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'national_id' => $request->national_id,
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'customer',
+            'role' => $request->role ?? 'user', // Default to 'user'
             'email_verified' => true,
         ]);
 
@@ -138,7 +138,7 @@ class AuthController extends Controller
             'phone' => 'required|string|max:20|unique:users',
             'national_id' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|in:customer,driver',
+            'role' => 'sometimes|in:user,driver,restaurant',
         ]);
 
         $user = User::create([
@@ -147,7 +147,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'national_id' => $request->national_id,
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'customer',
+            'role' => $request->role ?? 'user',
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
