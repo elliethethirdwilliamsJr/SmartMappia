@@ -53,6 +53,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Driver routes
+    Route::prefix('driver')->group(function () {
+        // Document upload and verification
+        Route::post('upload-documents', [DriverController::class, 'uploadDocuments']);
+        Route::get('verification-status', [DriverController::class, 'getVerificationStatus']);
+        Route::get('profile', [DriverController::class, 'getProfile']);
+        Route::put('location', [DriverController::class, 'updateLocation']);
+        Route::put('status', [DriverController::class, 'updateStatus']);
+    });
+    
+    // Legacy driver routes (keeping for backward compatibility)
     Route::prefix('drivers')->group(function () {
         Route::get('nearby', [DriverController::class, 'nearby']);
         Route::post('register', [DriverController::class, 'register']);

@@ -28,6 +28,17 @@ class Driver extends Model
         'verified_at',
         'total_trips',
         'total_earnings',
+        // Document photos
+        'national_id_photo',
+        'driving_license_photo',
+        'vehicle_registration_photo',
+        'vehicle_insurance_photo',
+        'profile_photo',
+        'vehicle_plate_photo',
+        // Verification
+        'verification_status',
+        'rejection_reason',
+        'documents_submitted_at',
     ];
 
     protected function casts(): array
@@ -38,6 +49,7 @@ class Driver extends Model
             'total_earnings' => 'decimal:2',
             'last_location_update' => 'datetime',
             'verified_at' => 'datetime',
+            'documents_submitted_at' => 'datetime',
             'is_verified' => 'boolean',
         ];
     }

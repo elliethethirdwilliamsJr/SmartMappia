@@ -4,6 +4,10 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/public/driver_documents/*
+/storage/app/public/*.jpg
+/storage/app/public/*.png
+/storage/app/public/*.jpeg
 /vendor
 .env
 .env.backup
