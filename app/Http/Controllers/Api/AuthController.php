@@ -4,14 +4,131 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
     /**
-     * Register a new user
+     * Send email verification code
+     */
+    public function sendVerificationCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:255',
+        ]);
+
+        // Generate 6-digit code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = Carbon::now()->addMinutes(10);
+
+        // Store in cache temporarily (email => [code, name, expires_at])
+        cache()->put(
+            'email_verification_' . $request->email,
+            [
+                'code' => $code,
+                'name' => $request->name,
+                'expires_at' => $expiresAt,
+            ],
+            600 // 10 minutes
+        );
+
+        // Send email
+        $sent = EmailService::sendVerificationCode(
+            $request->email,
+            $request->name,
+            $code
+        );
+
+        if (!$sent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email. Please try again.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent to your email',
+            'expires_at' => $expiresAt->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Verify email code and register user
+     */
+    public function verifyAndRegister(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'code' => 'required|string|size:6',
+            'phone' => 'required|string|max:20|unique:users',
+            'national_id' => 'nullable|string|max:20|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'sometimes|in:customer,driver',
+        ]);
+
+        // Get cached verification data
+        $cacheKey = 'email_verification_' . $request->email;
+        $verificationData = cache()->get($cacheKey);
+
+        if (!$verificationData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification code expired. Please request a new one.',
+            ], 400);
+        }
+
+        // Verify code
+        if ($verificationData['code'] !== $request->code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid verification code.',
+            ], 400);
+        }
+
+        // Check if expired
+        if (Carbon::parse($verificationData['expires_at'])->isPast()) {
+            cache()->forget($cacheKey);
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification code expired. Please request a new one.',
+            ], 400);
+        }
+
+        // Create user
+        $user = User::create([
+            'name' => $verificationData['name'],
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'national_id' => $request->national_id,
+            'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'customer',
+            'email_verified' => true,
+        ]);
+
+        // Clear cache
+        cache()->forget($cacheKey);
+
+        // Create token
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account created successfully',
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Register a new user (OLD METHOD - keeping for backward compatibility)
      */
     public function register(Request $request)
     {

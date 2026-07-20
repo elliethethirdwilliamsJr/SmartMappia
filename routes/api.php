@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\LocationController;
 
 // Public routes
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
+    Route::post('send-verification-code', [AuthController::class, 'sendVerificationCode']);
+    Route::post('verify-and-register', [AuthController::class, 'verifyAndRegister']);
+    Route::post('register', [AuthController::class, 'register']); // Backward compatibility
     Route::post('login', [AuthController::class, 'login']);
     Route::post('verify-phone', [AuthController::class, 'verifyPhone']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
